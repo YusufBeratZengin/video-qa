@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "path": "out.mp4",
+  "profile": "shorts",
+  "checks": [
+    {
+      "name": "resolution",
+      "status": "pass",
+      "message": "Display raster 1080x1920; expected 1080x1920"
+    },
+    {
+      "name": "aspect_ratio",
+      "status": "pass",
+      "message": "Display aspect 0.56250; expected 0.56250"
+    },
+    {
+      "name": "fps",
+      "status": "pass",
+      "message": "Average 30.000 fps; allowed 24-60"
+    },
+    {
+      "name": "duration",
+      "status": "pass",
+      "message": "3.000s; allowed 0.1-60s"
+    },
+    {
+      "name": "freeze",
+      "status": "pass",
+      "message": "Longest 0.000s across 0 event(s); allowed <= 1.5s"
+    },
+    {
+      "name": "black",
+      "status": "pass",
+      "message": "Longest 0.000s across 0 event(s); allowed <= 0.5s"
+    },
+    {
+      "name": "silence",
+      "status": "pass",
+      "message": "Longest 0.000s across 0 event(s); allowed <= 2s"
+    },
+    {
+      "name": "audio",
+      "status": "pass",
+      "message": "Audio stream present"
+    },
+    {
+      "name": "clipping",
+      "status": "pass",
+      "message": "Sample peak -17.687953 dBFS; allowed <= -0.1 dBFS"
+    },
+    {
+      "name": "true_peak",
+      "status": "pass",
+      "message": "True peak -17.69 dBTP; allowed <= -0.1 dBTP"
+    },
+    {
+      "name": "loudness",
+      "status": "warn",
+      "message": "Integrated -21.8 LUFS; target -14 +/- 2"
+    },
+    {
+      "name": "audio_coverage",
+      "status": "pass",
+      "message": "Video extends 0.000s beyond audio; allowed <= 2s"
+    }
+  ],
+  "media": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30.0,
+    "duration": 3.0,
+    "has_audio": true,
+    "video_duration": 3.0,
+    "audio_duration": 3.0,
+    "sample_aspect_ratio": 1.0,
+    "rotation": 0,
+    "video_streams": 1,
+    "audio_streams": 1
+  },
+  "measurements": {
+    "freezes": [],
+    "black": [],
+    "silence": [],
+    "integrated_lufs": -21.8,
+    "true_peak_dbfs": -17.69,
+    "sample_peak_dbfs": -17.687953
+  },
+  "probe_source": "ffmpeg",
+  "passed": true,
+  "failures": 0,
+  "warnings": 1
+}

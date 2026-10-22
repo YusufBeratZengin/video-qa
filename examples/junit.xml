@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="video-qa" tests="12" failures="0" errors="0" skipped="0">
+  <properties>
+    <property name="input" value="out.mp4" />
+    <property name="profile" value="shorts" />
+    <property name="probe_source" value="ffmpeg" />
+    <property name="warnings" value="1" />
+  </properties>
+  <testcase classname="video_qa" name="resolution" />
+  <testcase classname="video_qa" name="aspect_ratio" />
+  <testcase classname="video_qa" name="fps" />
+  <testcase classname="video_qa" name="duration" />
+  <testcase classname="video_qa" name="freeze" />
+  <testcase classname="video_qa" name="black" />
+  <testcase classname="video_qa" name="silence" />
+  <testcase classname="video_qa" name="audio" />
+  <testcase classname="video_qa" name="clipping" />
+  <testcase classname="video_qa" name="true_peak" />
+  <testcase classname="video_qa" name="loudness">
+    <system-out>WARNING: Integrated -21.8 LUFS; target -14 +/- 2</system-out>
+  </testcase>
+  <testcase classname="video_qa" name="audio_coverage" />
+</testsuite>

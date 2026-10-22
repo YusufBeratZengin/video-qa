@@ -1,0 +1,54 @@
+name: Video Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality-check:
+    name: Check Rendered Video
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+
+      - name: Install video-qa
+        run: python -m pip install "video-qa[ffmpeg]"
+
+      # Replace this step with your actual render step (e.g. npx remotion render ...)
+      - name: Render video
+        run: |
+          ffmpeg -hide_banner -loglevel error -y \
+            -f lavfi -i testsrc=size=1080x1920:rate=30 \
+            -f lavfi -i sine=frequency=440 \
+            -t 5 -c:v libx264 -c:a aac out.mp4
+
+      - name: Run video-qa quality gate
+        run: |
+          video-qa check out.mp4 --profile shorts --format junit --output junit.xml
+
+      - name: Upload JUnit test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-qa-junit-report
+          path: junit.xml
+
+      # Optional step: publish test results directly into GitHub Actions UI
+      # - name: Publish Unit Test Results
+      #   uses: EnricoMi/publish-unit-test-result-action@v2
+      #   if: always()
+      #   with:
+      #     junit_files: "junit.xml"
