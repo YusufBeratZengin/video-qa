@@ -1,4 +1,5 @@
 include README.md README.tr.md LICENSE CONTRIBUTING.md CHANGELOG.md SECURITY.md
+include src/video_qa/py.typed
 include .editorconfig .gitignore
 recursive-include examples *.toml *.json
 recursive-include tests *.py *.json *.log *.md
