@@ -1,0 +1,2 @@
+[freezedetect @ ADDRESS] lavfi.freezedetect.freeze_start: 0
+[blackdetect @ ADDRESS] black_start:0 black_end:3 black_duration:3

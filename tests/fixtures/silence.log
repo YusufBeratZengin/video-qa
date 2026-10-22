@@ -1,0 +1,64 @@
+[silencedetect @ ADDRESS] silence_start: 0
+[silencedetect @ ADDRESS] silence_end: 6.013609 | silence_duration: 6.013609
+[Parsed_loudnorm_2 @ ADDRESS] 
+{
+	"input_i" : "-inf",
+	"input_tp" : "-inf",
+	"input_lra" : "0.00",
+	"input_thresh" : "-70.00",
+	"output_i" : "-inf",
+	"output_tp" : "-inf",
+	"output_lra" : "0.00",
+	"output_thresh" : "-70.00",
+	"normalization_type" : "dynamic",
+	"target_offset" : "inf"
+}
+[Parsed_astats_1 @ ADDRESS] Channel: 1
+[Parsed_astats_1 @ ADDRESS] DC offset: 0.000000
+[Parsed_astats_1 @ ADDRESS] Min level: 0.000000
+[Parsed_astats_1 @ ADDRESS] Max level: 0.000000
+[Parsed_astats_1 @ ADDRESS] Min difference: 0.000000
+[Parsed_astats_1 @ ADDRESS] Max difference: 0.000000
+[Parsed_astats_1 @ ADDRESS] Mean difference: 0.000000
+[Parsed_astats_1 @ ADDRESS] RMS difference: 0.000000
+[Parsed_astats_1 @ ADDRESS] Peak level dB: -inf
+[Parsed_astats_1 @ ADDRESS] RMS level dB: -inf
+[Parsed_astats_1 @ ADDRESS] RMS peak dB: -inf
+[Parsed_astats_1 @ ADDRESS] RMS trough dB: -inf
+[Parsed_astats_1 @ ADDRESS] Crest factor: 1.000000
+[Parsed_astats_1 @ ADDRESS] Flat factor: -inf
+[Parsed_astats_1 @ ADDRESS] Peak count: 2309226
+[Parsed_astats_1 @ ADDRESS] Abs Peak count: 1154613
+[Parsed_astats_1 @ ADDRESS] Noise floor dB: -inf
+[Parsed_astats_1 @ ADDRESS] Noise floor count: 1145014
+[Parsed_astats_1 @ ADDRESS] Entropy: -0.000000
+[Parsed_astats_1 @ ADDRESS] Bit depth: 0/0/0/0
+[Parsed_astats_1 @ ADDRESS] Dynamic range: -inf
+[Parsed_astats_1 @ ADDRESS] Zero crossings: 0
+[Parsed_astats_1 @ ADDRESS] Zero crossings rate: 0.000000
+[Parsed_astats_1 @ ADDRESS] Number of NaNs: 0
+[Parsed_astats_1 @ ADDRESS] Number of Infs: 0
+[Parsed_astats_1 @ ADDRESS] Number of denormals: 0
+[Parsed_astats_1 @ ADDRESS] Overall
+[Parsed_astats_1 @ ADDRESS] DC offset: 0.000000
+[Parsed_astats_1 @ ADDRESS] Min level: 0.000000
+[Parsed_astats_1 @ ADDRESS] Max level: 0.000000
+[Parsed_astats_1 @ ADDRESS] Min difference: 0.000000
+[Parsed_astats_1 @ ADDRESS] Max difference: 0.000000
+[Parsed_astats_1 @ ADDRESS] Mean difference: 0.000000
+[Parsed_astats_1 @ ADDRESS] RMS difference: 0.000000
+[Parsed_astats_1 @ ADDRESS] Peak level dB: -inf
+[Parsed_astats_1 @ ADDRESS] RMS level dB: -inf
+[Parsed_astats_1 @ ADDRESS] RMS peak dB: -inf
+[Parsed_astats_1 @ ADDRESS] RMS trough dB: -inf
+[Parsed_astats_1 @ ADDRESS] Flat factor: -inf
+[Parsed_astats_1 @ ADDRESS] Peak count: 2309226.000000
+[Parsed_astats_1 @ ADDRESS] Abs Peak count: 1154613.000000
+[Parsed_astats_1 @ ADDRESS] Noise floor dB: -inf
+[Parsed_astats_1 @ ADDRESS] Noise floor count: 1145014.000000
+[Parsed_astats_1 @ ADDRESS] Entropy: 0.000000
+[Parsed_astats_1 @ ADDRESS] Bit depth: 0/0/0/0
+[Parsed_astats_1 @ ADDRESS] Number of samples: 1154613
+[Parsed_astats_1 @ ADDRESS] Number of NaNs: 0.000000
+[Parsed_astats_1 @ ADDRESS] Number of Infs: 0.000000
+[Parsed_astats_1 @ ADDRESS] Number of denormals: 0.000000

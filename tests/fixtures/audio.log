@@ -1,0 +1,56 @@
+[Parsed_loudnorm_2 @ ADDRESS] 
+{
+	"input_i" : "-21.75",
+	"input_tp" : "-18.06",
+	"input_lra" : "0.00",
+	"input_thresh" : "-31.75",
+	"output_i" : "-14.01",
+	"output_tp" : "-10.27",
+	"output_lra" : "0.00",
+	"output_thresh" : "-24.01",
+	"normalization_type" : "dynamic",
+	"target_offset" : "0.01"
+}
+[Parsed_astats_1 @ ADDRESS] Channel: 1
+[Parsed_astats_1 @ ADDRESS] DC offset: 0.000003
+[Parsed_astats_1 @ ADDRESS] Min level: -4095.000000
+[Parsed_astats_1 @ ADDRESS] Max level: 4095.000000
+[Parsed_astats_1 @ ADDRESS] Min difference: 0.000000
+[Parsed_astats_1 @ ADDRESS] Max difference: 257.000000
+[Parsed_astats_1 @ ADDRESS] Mean difference: 163.409932
+[Parsed_astats_1 @ ADDRESS] RMS difference: 181.501506
+[Parsed_astats_1 @ ADDRESS] Peak level dB: -18.063656
+[Parsed_astats_1 @ ADDRESS] RMS level dB: -21.073877
+[Parsed_astats_1 @ ADDRESS] RMS peak dB: -21.058020
+[Parsed_astats_1 @ ADDRESS] RMS trough dB: -23.077976
+[Parsed_astats_1 @ ADDRESS] Crest factor: 1.414201
+[Parsed_astats_1 @ ADDRESS] Flat factor: 0.000000
+[Parsed_astats_1 @ ADDRESS] Peak count: 2887
+[Parsed_astats_1 @ ADDRESS] Abs Peak count: 2887
+[Parsed_astats_1 @ ADDRESS] Noise floor dB: -18.063656
+[Parsed_astats_1 @ ADDRESS] Noise floor count: 263012
+[Parsed_astats_1 @ ADDRESS] Entropy: 0.741744
+[Parsed_astats_1 @ ADDRESS] Bit depth: 12/16/16/16
+[Parsed_astats_1 @ ADDRESS] Dynamic range: 78.265678
+[Parsed_astats_1 @ ADDRESS] Zero crossings: 5293
+[Parsed_astats_1 @ ADDRESS] Zero crossings rate: 0.019957
+[Parsed_astats_1 @ ADDRESS] Overall
+[Parsed_astats_1 @ ADDRESS] DC offset: 0.000003
+[Parsed_astats_1 @ ADDRESS] Min level: -4095.000000
+[Parsed_astats_1 @ ADDRESS] Max level: 4095.000000
+[Parsed_astats_1 @ ADDRESS] Min difference: 0.000000
+[Parsed_astats_1 @ ADDRESS] Max difference: 257.000000
+[Parsed_astats_1 @ ADDRESS] Mean difference: 163.409932
+[Parsed_astats_1 @ ADDRESS] RMS difference: 181.501506
+[Parsed_astats_1 @ ADDRESS] Peak level dB: -18.063656
+[Parsed_astats_1 @ ADDRESS] RMS level dB: -21.073877
+[Parsed_astats_1 @ ADDRESS] RMS peak dB: -21.058020
+[Parsed_astats_1 @ ADDRESS] RMS trough dB: -23.077976
+[Parsed_astats_1 @ ADDRESS] Flat factor: 0.000000
+[Parsed_astats_1 @ ADDRESS] Peak count: 2887.000000
+[Parsed_astats_1 @ ADDRESS] Abs Peak count: 2887.000000
+[Parsed_astats_1 @ ADDRESS] Noise floor dB: -18.063656
+[Parsed_astats_1 @ ADDRESS] Noise floor count: 263012.000000
+[Parsed_astats_1 @ ADDRESS] Entropy: 0.741744
+[Parsed_astats_1 @ ADDRESS] Bit depth: 12/16/16/16
+[Parsed_astats_1 @ ADDRESS] Number of samples: 265216
