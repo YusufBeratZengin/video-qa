@@ -82,6 +82,99 @@ def parse_probe(text: str) -> MediaInfo:
         raise ParseError(f"Invalid ffprobe JSON: {exc}") from exc
 
 
+def _parse_time(h: str, m: str, s: str) -> float:
+    return int(h) * 3600 + int(m) * 60 + float(s)
+
+
+def parse_ffmpeg_info(text: str) -> MediaInfo:
+    """Read stream metadata from ffmpeg -hide_banner -i stderr output."""
+    dur_match = re.search(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", text)
+    container_duration = _parse_time(*dur_match.groups()) if dur_match else None
+
+    stream_pattern = re.compile(
+        r"^\s*Stream #\d+:\d+.*?: (Video|Audio|Subtitle|Data|Attachment)", re.MULTILINE
+    )
+    matches = list(stream_pattern.finditer(text))
+
+    videos: list[str] = []
+    audios: list[str] = []
+    for i, m in enumerate(matches):
+        start = m.start()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        block = text[start:end]
+        kind = m.group(1)
+        if kind == "Video":
+            first_line = block.splitlines()[0]
+            if "(attached pic)" not in first_line:
+                videos.append(block)
+        elif kind == "Audio":
+            audios.append(block)
+
+    if not videos:
+        raise ParseError("No playable video stream found")
+
+    v_block = videos[0]
+    v_first = v_block.splitlines()[0]
+
+    res_m = re.search(r",\s*(\d{2,})x(\d{2,})\b", v_first) or re.search(
+        r"\b(\d{2,})x(\d{2,})\b", v_first
+    )
+    if not res_m:
+        raise ParseError("Video dimensions, frame rate and duration must be positive")
+    width, height = int(res_m.group(1)), int(res_m.group(2))
+
+    fps_m = re.search(r"(\d+(?:\.\d+)?|\d+/\d+)\s*fps", v_first)
+    fps = _positive(fps_m.group(1)) if fps_m else None
+    if fps is None:
+        tbr_m = re.search(r"(\d+(?:\.\d+)?|\d+/\d+)\s*tbr", v_first)
+        fps = _positive(tbr_m.group(1)) if tbr_m else None
+
+    v_dur_m = re.search(r"DURATION(?:-\w+)?\s*:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", v_block)
+    v_dur = _parse_time(*v_dur_m.groups()) if v_dur_m else container_duration
+
+    if min(width, height) <= 0 or fps is None or v_dur is None:
+        raise ParseError("Video dimensions, frame rate and duration must be positive")
+
+    rotation = 0
+    rot_m = re.search(
+        r"displaymatrix:\s*rotation of\s*(-?\d+(?:\.\d+)?)\s*degrees", v_block, re.IGNORECASE
+    )
+    if rot_m:
+        rotation = int(float(rot_m.group(1)))
+    else:
+        rot_m2 = re.search(r"^\s*rotate\s*:\s*(-?\d+)", v_block, re.MULTILINE | re.IGNORECASE)
+        if rot_m2:
+            rotation = int(float(rot_m2.group(1)))
+
+    if rotation % 90 != 0:
+        raise ParseError("Only right-angle display rotation is supported")
+
+    sar_m = re.search(r"\bSAR\s*(\d+:\d+|\d+/\d+)", v_first)
+    sar = 1.0
+    if sar_m:
+        sar = _positive(sar_m.group(1).replace(":", "/")) or 1.0
+
+    a_dur = None
+    if audios:
+        a_dur_m = re.search(r"DURATION(?:-\w+)?\s*:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", audios[0])
+        a_dur = _parse_time(*a_dur_m.groups()) if a_dur_m else container_duration or v_dur
+
+    duration = max(v_dur, a_dur or 0.0, container_duration or 0.0)
+    return MediaInfo(
+        width=width,
+        height=height,
+        fps=fps,
+        duration=duration,
+        has_audio=bool(audios),
+        video_duration=v_dur,
+        audio_duration=a_dur,
+        sample_aspect_ratio=sar,
+        rotation=rotation,
+        video_streams=len(videos),
+        audio_streams=len(audios),
+    )
+
+
 def parse_intervals(text: str, kind: str, duration: float) -> list[Interval]:
     """Pair events; close an open freeze/silence/black interval at stream EOF.
 
@@ -100,9 +193,10 @@ def parse_intervals(text: str, kind: str, duration: float) -> list[Interval]:
         elif start is not None:
             if timestamp < start:
                 raise ParseError(f"{kind} interval ends before it starts")
-            result.append(Interval(start, timestamp))
+            if timestamp > start and start < duration:
+                result.append(Interval(start, timestamp))
             start = None
-    if start is not None:
+    if start is not None and start < duration:
         result.append(Interval(start, duration))
     return result
 

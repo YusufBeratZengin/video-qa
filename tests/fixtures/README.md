@@ -19,3 +19,11 @@ diagnostic lines and loudnorm JSON were retained in their original order. The
 open freeze event exercises EOF closure; silence includes `-inf` measurements.
 Additional unit tests cover CRLF, scientific notation, completed events, channel
 peak selection, malformed output, and unrelated log noise.
+
+`ffmpeg_h264_aac.log`, `ffmpeg_video_only.log`, and `ffmpeg_audio_only.log` are
+captured `ffmpeg -hide_banner -i` stderr samples used to verify the fallback
+stream metadata parser when ffprobe is absent.
+
+`silence_trailing.log` is a captured real output exercising AAC trailing silence
+intervals (`silence_start: 3.001`, `silence_end: 3.018` for a 3.0s stream) that
+must be ignored to prevent false failures when `max_silence` is 0.

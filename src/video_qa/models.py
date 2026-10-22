@@ -59,6 +59,7 @@ class Report:
     checks: list[Check]
     media: MediaInfo | None = None
     measurements: Measurements | None = None
+    probe_source: str = "ffprobe"
 
     @property
     def passed(self) -> bool:

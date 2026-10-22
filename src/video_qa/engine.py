@@ -8,7 +8,13 @@ from video_qa.models import Check, Measurements, MediaInfo, Report
 from video_qa.profiles import Profile
 
 
-def evaluate(path: str, media: MediaInfo, measured: Measurements, profile: Profile) -> Report:
+def evaluate(
+    path: str,
+    media: MediaInfo,
+    measured: Measurements,
+    profile: Profile,
+    probe_source: str = "ffprobe",
+) -> Report:
     checks: list[Check] = []
 
     def add(name: str, passed: bool, message: str, severity: str = "fail") -> None:
@@ -91,4 +97,4 @@ def evaluate(path: str, media: MediaInfo, measured: Measurements, profile: Profi
             )
     if media.video_streams > 1 or media.audio_streams > 1:
         checks.append(Check("streams", "warn", "Only first playable video and first audio checked"))
-    return Report(path, profile.name, checks, media, measured)
+    return Report(path, profile.name, checks, media, measured, probe_source=probe_source)

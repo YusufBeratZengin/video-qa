@@ -1,0 +1,17 @@
+[silencedetect @ ADDRESS] silence_start: 3.001
+[silencedetect @ ADDRESS] silence_end: 3.018 | silence_duration: 0.017
+[Parsed_loudnorm_2 @ ADDRESS] 
+{
+	"input_i" : "-20.00",
+	"input_tp" : "-1.00",
+	"input_lra" : "0.00",
+	"input_thresh" : "-70.00",
+	"output_i" : "-20.00",
+	"output_tp" : "-1.00",
+	"output_lra" : "0.00",
+	"output_thresh" : "-70.00",
+	"normalization_type" : "dynamic",
+	"target_offset" : "6.00"
+}
+[Parsed_astats_1 @ ADDRESS] Channel: 1
+[Parsed_astats_1 @ ADDRESS] Peak level dB: -1.000000

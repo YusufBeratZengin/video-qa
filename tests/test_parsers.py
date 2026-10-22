@@ -7,6 +7,7 @@ from video_qa.models import Interval
 from video_qa.parsers import (
     ParseError,
     parse_astats,
+    parse_ffmpeg_info,
     parse_intervals,
     parse_loudnorm,
     parse_probe,
@@ -151,3 +152,73 @@ class FilterTests(unittest.TestCase):
         for text in ("no peaks", "Peak level dB: nan", "Peak level dB: +inf"):
             with self.subTest(text=text), self.assertRaises(ParseError):
                 parse_astats(text)
+
+    def test_silence_trailing_quirk_ignored(self):
+        text = (FIXTURES / "silence_trailing.log").read_text()
+        # Stream duration is 3.0, trailing silence begins at 3.001 and ends at 3.018.
+        # Intervals with start >= stream duration or 0 length must be ignored.
+        silence = parse_intervals(text, "silence", 3.0)
+        self.assertEqual(silence, [])
+
+
+class FFmpegInfoTests(unittest.TestCase):
+    def test_captured_h264_aac(self):
+        text = (FIXTURES / "ffmpeg_h264_aac.log").read_text()
+        media = parse_ffmpeg_info(text)
+        self.assertEqual((media.width, media.height), (1080, 1920))
+        self.assertAlmostEqual(media.fps, 30.0)
+        self.assertAlmostEqual(media.duration, 4.0)
+        self.assertTrue(media.has_audio)
+        self.assertEqual(media.video_streams, 1)
+        self.assertEqual(media.audio_streams, 1)
+        self.assertEqual(media.rotation, 0)
+        self.assertAlmostEqual(media.sample_aspect_ratio, 1.0)
+
+    def test_captured_video_only(self):
+        text = (FIXTURES / "ffmpeg_video_only.log").read_text()
+        media = parse_ffmpeg_info(text)
+        self.assertEqual((media.width, media.height), (1080, 1920))
+        self.assertFalse(media.has_audio)
+        self.assertIsNone(media.audio_duration)
+        self.assertEqual(media.audio_streams, 0)
+
+    def test_captured_audio_only_raises(self):
+        text = (FIXTURES / "ffmpeg_audio_only.log").read_text()
+        with self.assertRaisesRegex(ParseError, "No playable video stream found"):
+            parse_ffmpeg_info(text)
+
+    def test_rotation_sar_and_cover(self):
+        text = (
+            "Input #0, matroska,webm, from 'test.mkv':\n"
+            "  Duration: 00:00:05.00, start: 0.000000, bitrate: 500 kb/s\n"
+            "  Stream #0:0: Video: mjpeg, 500x500 (attached pic)\n"
+            "  Stream #0:1: Video: h264, 1920x1080 [SAR 2:1 DAR 32:9], 25 fps, 25 tbr\n"
+            "    Side data:\n"
+            "      displaymatrix: rotation of -90.00 degrees\n"
+            "  Stream #0:2: Audio: aac, 48000 Hz, stereo\n"
+        )
+        media = parse_ffmpeg_info(text)
+        self.assertEqual((media.width, media.height), (1920, 1080))
+        self.assertEqual(media.video_streams, 1)
+        self.assertEqual(media.rotation, -90)
+        self.assertAlmostEqual(media.sample_aspect_ratio, 2.0)
+        self.assertAlmostEqual(media.fps, 25.0)
+
+    def test_bad_ffmpeg_info_fails_closed(self):
+        for text in (
+            "unrelated output",
+            "Duration: N/A\nStream #0:0: Video: h264, 1080x1920, 30 fps",
+            "Duration: 00:00:01.00\nStream #0:0: Video: h264, 1080x1920, 0 fps",
+            "Duration: 00:00:01.00\nStream #0:0: Video: h264, 0x0, 30 fps",
+        ):
+            with self.subTest(text=text), self.assertRaises(ParseError):
+                parse_ffmpeg_info(text)
+
+        rot_text = (
+            "Duration: 00:00:01.00\n"
+            "Stream #0:0: Video: h264, 1080x1920, 30 fps\n"
+            "  Side data:\n"
+            "    displaymatrix: rotation of 45.00 degrees\n"
+        )
+        with self.assertRaisesRegex(ParseError, "Only right-angle display rotation is supported"):
+            parse_ffmpeg_info(rot_text)

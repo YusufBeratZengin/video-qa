@@ -52,6 +52,7 @@ def junit_report(report: Report) -> str:
     for key, value in (
         ("input", report.path),
         ("profile", report.profile),
+        ("probe_source", report.probe_source),
         ("warnings", str(report.warnings)),
     ):
         ET.SubElement(properties, "property", {"name": key, "value": _xml_safe(value)})
@@ -70,11 +71,15 @@ def junit_report(report: Report) -> str:
             )
         elif check.status == "warn":
             ET.SubElement(case, "system-out").text = "WARNING: " + _xml_safe(check.message)
+    ET.indent(suite)
     return ET.tostring(suite, encoding="unicode", xml_declaration=True)
 
 
 def human_report(report: Report) -> str:
-    lines = [f"{report.path} (profile: {report.profile})", "STATUS  CHECK           DETAIL"]
+    lines = [
+        f"{report.path} (profile: {report.profile}, probe: {report.probe_source})",
+        "STATUS  CHECK           DETAIL",
+    ]
     lines.extend(f"{c.status.upper():<7} {c.name:<15} {c.message}" for c in report.checks)
     lines.append(
         f"{'PASS' if report.passed else 'FAIL'}: "
