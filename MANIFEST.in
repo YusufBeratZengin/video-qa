@@ -1,0 +1,8 @@
+include README.md README.tr.md LICENSE CONTRIBUTING.md CHANGELOG.md SECURITY.md
+include .editorconfig .gitignore
+recursive-include examples *.toml *.json
+recursive-include tests *.py *.json *.log *.md
+recursive-include .github *.yml
+prune is
+prune veri
+global-exclude *.py[cod] .env* *.pem *.key *.p12 *.pfx
