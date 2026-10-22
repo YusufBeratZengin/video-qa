@@ -1,0 +1,9 @@
+{
+  "extends": "reels",
+  "name": "landscape-preview",
+  "width": 1920,
+  "height": 1080,
+  "aspect_ratio": 1.7777777777777777,
+  "max_duration": 120,
+  "require_audio": false
+}

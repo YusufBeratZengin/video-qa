@@ -1,0 +1,10 @@
+# Editorial defaults, not a statement of current platform upload limits.
+extends = "shorts"
+name = "shorts-strict"
+max_duration = 75
+max_freeze = 0.5
+max_black = 0.25
+max_silence = 1.0
+target_lufs = -14
+lufs_tolerance = 2
+loudness_severity = "fail"
