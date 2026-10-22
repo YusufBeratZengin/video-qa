@@ -12,7 +12,7 @@ from video_qa import __version__
 from video_qa.analyzer import AnalysisError, analyze
 from video_qa.models import Check, Report
 from video_qa.parsers import ParseError
-from video_qa.profiles import load_profile
+from video_qa.profiles import BUILTINS, load_profile
 from video_qa.reports import RENDERERS
 
 
@@ -23,17 +23,58 @@ def _timeout(value: str) -> float:
     return result
 
 
+def list_profiles_text() -> str:
+    lines: list[str] = ["Built-in profiles and thresholds:\n"]
+    for name, p in BUILTINS.items():
+        lines.append(f"Profile: {name}")
+        lines.append(
+            f"  Raster: {p.width}x{p.height} "
+            f"(aspect ratio: {p.aspect_ratio:.5f} +/- {p.aspect_tolerance:g})"
+        )
+        lines.append(f"  Frame rate: {p.min_fps:g}-{p.max_fps:g} fps")
+        lines.append(f"  Duration: {p.min_duration:g}-{p.max_duration:g} s")
+        lines.append(f"  Max freeze: <= {p.max_freeze:g} s (noise: {p.freeze_noise_db:g} dB)")
+        lines.append(
+            f"  Max black: <= {p.max_black:g} s "
+            f"(pixel th: {p.black_pixel_threshold:g}, pic th: {p.black_picture_ratio:g})"
+        )
+        lines.append(f"  Max silence: <= {p.max_silence:g} s (noise: {p.silence_db:g} dB)")
+        lines.append(f"  Audio required: {p.require_audio}")
+        lines.append(f"  Max peak: <= {p.max_peak_dbfs:g} dBFS / dBTP")
+        lines.append(
+            f"  Target loudness: {p.target_lufs:g} +/- {p.lufs_tolerance:g} LUFS "
+            f"(severity: {p.loudness_severity})"
+        )
+        lines.append("")
+    return "\n".join(lines).strip()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="video-qa", description="Local rendered-video quality gate"
     )
     parser.add_argument("--version", action="version", version=__version__)
-    sub = parser.add_subparsers(dest="command", required=True)
+    parser.add_argument(
+        "--list-profiles",
+        action="store_true",
+        help="Print presets and their thresholds, then exit",
+    )
+    sub = parser.add_subparsers(dest="command")
     check = sub.add_parser("check", help="Decode a video and evaluate quality rules")
-    check.add_argument("input", type=Path)
+    check.add_argument("input", type=Path, nargs="?", default=None, help="Input video file path")
+    check.add_argument(
+        "--list-profiles",
+        action="store_true",
+        help="Print presets and their thresholds, then exit",
+    )
     check.add_argument("--profile", default="shorts", help="Preset name or JSON/TOML path")
     for flag in ("max-freeze", "max-black", "max-silence", "max-duration", "target-lufs"):
         check.add_argument(f"--{flag}", type=float, default=None)
+    check.add_argument(
+        "--fail-on-warn",
+        action="store_true",
+        help="Treat warnings as failures and exit with code 1",
+    )
     check.add_argument("--format", choices=RENDERERS, default="human")
     check.add_argument("--output", type=Path, help="Write report here instead of stdout")
     check.add_argument(
@@ -43,8 +84,19 @@ def main(argv: list[str] | None = None) -> int:
         help="Timeout in seconds per subprocess (default: 300)",
     )
     check.add_argument("--ffmpeg", help="FFmpeg executable path")
-    check.add_argument("--ffprobe", help="ffprobe executable path (required separately from extra)")
+    check.add_argument(
+        "--ffprobe",
+        help="ffprobe executable path (optional; falls back to ffmpeg when omitted)",
+    )
     args = parser.parse_args(argv)
+    if getattr(args, "list_profiles", False):
+        print(list_profiles_text())
+        return 0
+    if not args.command:
+        parser.print_help()
+        return 2
+    if args.input is None:
+        check.error("the following arguments are required: input")
     try:
         profile = load_profile(args.profile)
         overrides = {
@@ -81,4 +133,6 @@ def main(argv: list[str] | None = None) -> int:
     except OSError as exc:
         print(f"Cannot write report: {exc}", file=sys.stderr)
         return 1
-    return 0 if report.passed else 1
+    if not report.passed or (getattr(args, "fail_on_warn", False) and report.warnings > 0):
+        return 1
+    return 0

@@ -71,6 +71,22 @@ class CliTests(unittest.TestCase):
         self.assertEqual(profile.max_freeze, 0.2)
         self.assertEqual(profile.target_lufs, -16)
 
+    @patch("video_qa.cli.analyze")
+    def test_fail_on_warn_exits_one(self, analyze_mock):
+        analyze_mock.return_value = Report("out.mp4", "shorts", [Check("loudness", "warn", "low")])
+        code, _, _ = self.invoke(["check", "out.mp4", "--fail-on-warn"])
+        self.assertEqual(code, 1)
+
+    def test_list_profiles_flag(self):
+        for args in (["--list-profiles"], ["check", "--list-profiles"]):
+            with self.subTest(args=args):
+                code, stdout, _ = self.invoke(args)
+                self.assertEqual(code, 0)
+                self.assertIn("shorts", stdout)
+                self.assertIn("reels", stdout)
+                self.assertIn("tiktok", stdout)
+                self.assertIn("1080x1920", stdout)
+
     @patch("video_qa.cli.analyze", side_effect=AnalysisError("ffprobe not found"))
     def test_operational_failure_is_machine_readable_and_exit_one(self, _):
         code, output, _ = self.invoke(["check", "out.mp4", "--format", "json"])
