@@ -47,6 +47,8 @@ jobs:
         run: python -m ruff check src tests
       - name: Check formatting
         run: python -m ruff format --check src tests
+      - name: Type check
+        run: python -m mypy
       - name: Test
         run: python -m unittest discover -s tests -v
       - name: Check installed CLI
