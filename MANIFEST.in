@@ -1,9 +1,11 @@
 include README.md README.tr.md LICENSE CONTRIBUTING.md CHANGELOG.md SECURITY.md
 include src/video_qa/py.typed
 include .editorconfig .gitignore
+recursive-include docs *.svg
+recursive-include scripts *.py
 recursive-include examples *.toml *.json
 recursive-include tests *.py *.json *.log *.md
-recursive-include .github *.yml
+recursive-include .github *.yml *.md
 prune is
 prune veri
 global-exclude *.py[cod] .env* *.pem *.key *.p12 *.pfx
