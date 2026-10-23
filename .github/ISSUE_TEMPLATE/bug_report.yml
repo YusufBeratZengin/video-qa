@@ -1,0 +1,59 @@
+name: Bug report
+description: Report a reproducible bug or unexpected behavior in video-qa
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve video-qa!
+        **Privacy notice**: Never upload confidential, proprietary, or personal media files. Reproductions using synthetic FFmpeg inputs (such as `testsrc` and `sine`) are strongly encouraged.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      description: A clear description of what went wrong or unexpected behavior observed.
+      placeholder: Describe what happened...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Command & Reproduction Steps
+      description: The exact command line and synthetic test command to reproduce this issue.
+      placeholder: |
+        video-qa check clip.mp4 --profile shorts
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: CLI Output / Report
+      description: Paste the console output, JSON, or JUnit report here.
+      placeholder: Paste output here...
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Provide version details for your system.
+      value: |
+        - OS: [e.g. Ubuntu 24.04, Windows 11, macOS 14]
+        - Python version (`python --version`):
+        - video-qa version (`video-qa --version`):
+        - FFmpeg version (`ffmpeg -version`):
+        - ffprobe installed: [Yes / No]
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I confirmed no private media or confidential data is included in this report.
+          required: true
+        - label: I tested with the latest release or main branch of video-qa.
+          required: false

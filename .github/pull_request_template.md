@@ -10,11 +10,11 @@
 
 <!-- How did you test these changes? Include command lines and results. -->
 
-- [ ] `python -m unittest discover -s tests -v` passes
-- [ ] `python -m ruff check src tests` passes
-- [ ] `python -m ruff format --check src tests` passes
+- [ ] `python -m pytest` passes with coverage >= 85%
+- [ ] `python -m ruff check src tests scripts` passes
+- [ ] `python -m ruff format --check src tests scripts` passes
 - [ ] `python -m mypy` passes
-- [ ] `python -m build && python -m twine check dist/*` passes
+- [ ] `python -m build` passes
 
 ## Checklist
 

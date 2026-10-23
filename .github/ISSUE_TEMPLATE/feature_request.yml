@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest an enhancement, new quality rule, or profile preset
+title: "[FEAT]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest an idea to make video-qa better for video rendering and automated quality gates!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: Is your feature request related to a specific problem or pipeline limitation?
+      placeholder: I am currently unable to check...
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed solution
+      description: Describe what you would like video-qa to do and how the CLI/configuration would look.
+      placeholder: Add a rule or option that...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions or workarounds you've evaluated.
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case / Context
+      description: How does this fit into your Remotion render pipeline, CI gate, or publishing workflow?
