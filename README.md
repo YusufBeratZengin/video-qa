@@ -1,65 +1,70 @@
 # video-qa
 
 [![CI](https://github.com/YusufBeratZengin/video-qa/actions/workflows/ci.yml/badge.svg)](https://github.com/YusufBeratZengin/video-qa/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PyPI version](https://img.shields.io/pypi/v/video-qa.svg)](https://pypi.org/project/video-qa/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Local quality checks for rendered videos, before publishing or as a CI gate.
-Detect frozen pictures, black segments, missing or silent audio, peaks near
-clipping, loudness drift, and unexpected resolution, frame rate, or duration.
-Useful after a Remotion render or an FFmpeg script.
+Local quality gates for rendered videos using FFmpeg.
+
+Detect frozen frames, black segments, missing or silent audio, peaks near clipping,
+loudness drift, and unexpected resolution, frame rate, or duration before publishing
+or as an automated CI gate. Ideal after Remotion renders or FFmpeg automation scripts.
 
 [Türkçe](README.tr.md) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
-## Install
+![video-qa terminal demo](docs/demo.svg)
 
-Requires Python 3.10+ and a local FFmpeg installation. When `ffprobe` is present
-on PATH or specified via `--ffprobe`, it is used to extract container and stream
-metadata. If `ffprobe` is absent, `video-qa` automatically falls back to parsing
-`ffmpeg -hide_banner -i` output, keeping the tool fully functional without a
-separate ffprobe binary.
+## Why video-qa?
 
-Use a full FFmpeg distribution with `freezedetect`, `blackdetect`,
-`silencedetect`, `astats`, and `loudnorm` filters. See the
-[FFmpeg download page](https://ffmpeg.org/download.html) for distributions.
+* **100% Local & Zero Cloud Costs**: Runs entirely on your machine or CI runner using FFmpeg. No video uploads, no third-party APIs, and zero subscription fees.
+* **Automated Multi-Pass Defect Detection**: Concurrently scans for frozen frames, black screens, silent dropouts, clipping audio peaks, loudness drift, and audio/video desync before your viewers notice.
+* **Built for CI/CD & Remotion Pipelines**: Native JUnit XML, strict JSON output, standard exit codes, and presets for Shorts, Reels, and TikTok ready to plug into GitHub Actions.
 
-From a checkout:
+## Quick start
+
+Requires Python 3.10+ and FFmpeg.
 
 ```console
+# 1. Install video-qa (add '.[ffmpeg]' if ffmpeg is not already in your PATH)
 python -m pip install .
+
+# 2. Run a quality gate against your rendered video
 video-qa check out.mp4 --profile shorts
 ```
 
-Alternatively, `python -m pip install '.[ffmpeg]'` supplies an FFmpeg binary
-through `imageio-ffmpeg` when ffmpeg is absent from PATH. While `imageio-ffmpeg`
-only provides `ffmpeg` (not `ffprobe`), `video-qa` seamlessly operates using its
-built-in FFmpeg metadata fallback. You can also specify binaries explicitly:
+If `ffprobe` is present on PATH or passed via `--ffprobe`, container metadata is read from ffprobe JSON. If `ffprobe` is missing, `video-qa` automatically falls back to parsing `ffmpeg -hide_banner -i` output, keeping the tool fully functional without extra dependencies.
+
+## Usage examples
 
 ```console
-video-qa check out.mp4 --ffmpeg /path/to/ffmpeg --ffprobe /path/to/ffprobe
-```
-
-All decoding runs locally. The tool does not upload media, call APIs, download
-binaries at runtime, or modify the input. Network protocols are disabled for
-FFmpeg/ffprobe inputs. Diagnostic reports contain the input path and may contain
-decoder messages; review them before sharing.
-
-## Use
-
-```console
+# Inspect built-in presets and threshold configurations
 video-qa --list-profiles
+
+# Check with custom threshold overrides
 video-qa check out.mp4 --profile shorts --max-freeze 1.5 --target-lufs -14
 video-qa check out.mp4 --profile reels --max-duration 120 --max-silence 1
+
+# Export machine-readable JSON or JUnit XML reports
 video-qa check out.mp4 --profile tiktok --format json --output report.json
 video-qa check out.mp4 --profile examples/custom.toml --format junit --output junit.xml
+
+# Fail CI builds on any warnings (such as loudness deviations)
 video-qa check out.mp4 --fail-on-warn
-python -m video_qa check out.mp4 --max-black 0.25 --timeout 600
+
+# Custom timeouts and binary paths
+video-qa check out.mp4 --ffmpeg /path/to/ffmpeg --ffprobe /path/to/ffprobe --timeout 600
 ```
 
-CLI flags:
-* `--list-profiles`: Print all built-in profiles and their default thresholds, then exit.
-* `--fail-on-warn`: Treat warnings (such as loudness deviations or multi-stream notices) as failures (exit code 1).
-* `--format`: Choose between `human` (default table), `json` (strict JSON schema), or `junit` (JUnit XML).
+### CLI Options
+
+* `--profile`: Profile preset (`shorts`, `reels`, `tiktok`) or path to a custom `.toml`/`.json` file.
+* `--list-profiles`: Print all built-in presets and their default thresholds, then exit.
+* `--fail-on-warn`: Treat warnings as failures (exit code 1).
+* `--format`: Output format: `human` (default table), `json` (strict schema), or `junit` (JUnit XML).
 * `--output`: Write report directly to a file instead of stdout.
+* `--timeout`: Subprocess timeout in seconds per pass (default: 300).
+* `--ffmpeg` / `--ffprobe`: Custom executable paths.
 
 | Exit code | Meaning |
 | --- | --- |
@@ -67,13 +72,25 @@ CLI flags:
 | 1 | Quality failure, decoding/tool/measurement error, `--fail-on-warn` with warnings, or report write failure |
 | 2 | Invalid arguments or profile configuration |
 
-Analysis errors are represented as a failed `analysis` check in the selected
-report format. Warnings never fail the gate by default. In JUnit they appear in a test's
-`system-out`; only failures create `failure` elements.
+### CI/CD Integration (GitHub Actions)
 
-## Example output
+Run `video-qa` as an automated gate in your CI pipeline after rendering videos with Remotion or FFmpeg. See [examples/github-workflow.yml](examples/github-workflow.yml) for a complete reusable workflow.
 
-### Human report (`--format human`)
+```yaml
+- name: Run video-qa quality gate
+  run: video-qa check out.mp4 --profile shorts --format junit --output junit.xml
+
+- name: Upload JUnit report
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: video-qa-junit-report
+    path: junit.xml
+```
+
+### Sample Reports
+
+#### Human report (`--format human`)
 
 ```text
 out.mp4 (profile: shorts, probe: ffmpeg)
@@ -93,7 +110,7 @@ PASS    audio_coverage  Video extends 0.000s beyond audio; allowed <= 2s
 PASS: 0 failure(s), 1 warning(s)
 ```
 
-### JUnit XML report (`--format junit`)
+#### JUnit XML report (`--format junit`)
 
 ```xml
 <?xml version='1.0' encoding='utf-8'?>
@@ -121,32 +138,11 @@ PASS: 0 failure(s), 1 warning(s)
 </testsuite>
 ```
 
-Full sample files generated by `scripts/make_examples.py` are saved in
-[examples/report.json](examples/report.json) and [examples/junit.xml](examples/junit.xml).
+Full generated samples: [examples/report.json](examples/report.json) and [examples/junit.xml](examples/junit.xml).
 
-## Continuous Integration (GitHub Actions)
+## Configuration
 
-You can run `video-qa` as an automated gate in your CI pipeline after rendering
-videos with Remotion or FFmpeg. See [examples/github-workflow.yml](examples/github-workflow.yml)
-for a complete reusable workflow.
-
-```yaml
-- name: Run video-qa quality gate
-  run: video-qa check out.mp4 --profile shorts --format junit --output junit.xml
-
-- name: Upload JUnit report
-  if: always()
-  uses: actions/upload-artifact@v4
-  with:
-    name: video-qa-junit-report
-    path: junit.xml
-```
-
-## Profiles and thresholds
-
-These are **editorial quality presets**, not promises about current upload
-eligibility or official platform limits. Set your own duration and audio policy.
-You can view these anytime with `video-qa --list-profiles`.
+Built-in presets provide baseline thresholds for common short-form platforms:
 
 | Preset | Display raster | Display aspect | Average fps | Duration |
 | --- | --- | --- | --- | --- |
@@ -154,7 +150,7 @@ You can view these anytime with `video-qa --list-profiles`.
 | `reels` | 1080×1920 | 9:16 | 24–60 | 0.1–90 seconds |
 | `tiktok` | 1080×1920 | 9:16 | 24–60 | 0.1–180 seconds |
 
-Common defaults:
+### Default Thresholds
 
 | Setting | Default | Result when exceeded |
 | --- | --- | --- |
@@ -165,19 +161,9 @@ Common defaults:
 | `max_peak_dbfs` | −0.1 dBFS sample peak and −0.1 dBTP true peak | Failure |
 | `require_audio` | `true` | Failure if no audio stream |
 
-Duration thresholds apply to the **longest contiguous event**, including
-leading/trailing events, not total accumulated time. Equality passes. Detection
-uses 1 ms minimum events for black and silence; freeze detection waits at least
-one average frame period plus 1 ms to avoid treating ordinary frame gaps as
-freezes. Very short repeated frames may therefore go undetected. Precision is
-limited by frame/sample timing. Digital silence gives
-`-inf` loudness and peaks; JSON represents this as the string `"-inf"`, never a
-nonstandard JSON number. Completely silent audio fails the silence rule.
+### Custom Profiles (TOML & JSON)
 
-Custom TOML and JSON files are flat objects. Start from a built-in with
-`extends` (defaults to `shorts`); omitted fields inherit that preset. Unknown keys,
-nonfinite numbers, invalid types, and inconsistent bounds are errors. CLI
-thresholds override the loaded profile.
+Custom configuration files inherit from built-in presets using `extends` (defaults to `shorts`).
 
 ```toml
 extends = "shorts"
@@ -189,65 +175,47 @@ lufs_tolerance = 2
 loudness_severity = "fail"
 ```
 
-Other configurable fields are `width`, `height`, `aspect_ratio` (numeric width /
-height), `aspect_tolerance` (absolute ratio error, default 0.01), `min_fps`,
-`max_fps`, `min_duration`, `max_black`, `max_silence`, `silence_db` (−50 dB),
-`freeze_noise_db` (−60 dB), `black_pixel_threshold` (0.1), `black_picture_ratio`
-(0.98), `max_peak_dbfs`, and `require_audio`. `loudness_severity` accepts `warn`
-or `fail`. Examples: [TOML](examples/custom.toml), [JSON](examples/custom.json).
+Configurable keys: `width`, `height`, `aspect_ratio`, `aspect_tolerance`, `min_fps`, `max_fps`, `min_duration`, `max_duration`, `max_freeze`, `max_black`, `max_silence`, `silence_db` (−50 dB), `freeze_noise_db` (−60 dB), `black_pixel_threshold` (0.1), `black_picture_ratio` (0.98), `max_peak_dbfs`, `require_audio`, and `loudness_severity` (`warn` or `fail`). Examples: [TOML](examples/custom.toml) and [JSON](examples/custom.json).
 
-## How analysis works, performance, and limits
+## FAQ & Limitations
 
-Stream metadata is obtained from `ffprobe` JSON or `ffmpeg -hide_banner -i` stderr.
-Decoding runs in two concurrent FFmpeg passes via a thread pool:
-`freezedetect`/`blackdetect` on video, and `silencedetect`/`astats`/`loudnorm` on audio.
-Running both passes concurrently maximizes throughput on multi-core systems while
-preserving strict per-process `--timeout` semantics and deterministic report output.
-On modern hardware, full analysis of a 60-second 1080×1920 synthetic clip takes
-approximately 2.7 seconds (~22× faster than realtime).
+* **How does decoding work?**
+  Metadata is probed via `ffprobe` (or `ffmpeg -i` fallback). Analysis runs in two concurrent passes via a thread pool: `freezedetect`/`blackdetect` on the video stream, and `silencedetect`/`astats`/`loudnorm` on the audio stream. On modern multi-core hardware, 60 seconds of video processes in ~2.7 seconds (~22× realtime).
+* **Can still title cards or artistic pauses trigger defects?**
+  Yes. Intentional pauses, static slide intros, or audio fades can trip freeze or silence limits if they exceed configured thresholds. Tune `--max-freeze`, `--max-black`, or `--max-silence` to fit your content style.
+* **How are audio peaks and loudness measured?**
+  Sample peak and true peak are measured on the original audio prior to loudness calculation. The tool measures EBU R128 integrated loudness (LUFS). Digital silence yields `-inf` LUFS (serialized as `"-inf"` string in JSON).
+* **What is out of scope?**
+  `video-qa` does not perform speech-to-text recognition, perceptual subjective video scoring (such as VMAF), codec compatibility policy checks, or platform API upload validation.
+* **Is my media uploaded anywhere?**
+  No. All analysis runs entirely on your local machine or CI runner. Network protocols are disabled in FFmpeg calls. Diagnostic reports contain local file paths and decoder messages; review them before sharing.
 
-Peaks are measured **before** loudnorm; reports use loudnorm's input measurements.
-The null output is discarded. A failed subprocess or missing required audio
-measurement fails the gate. `--timeout` applies separately to each subprocess
-(default 300 seconds), rather than to the whole check.
+## Contributing
 
-Only the first playable video (excluding cover art) and first audio stream are
-checked; multiple streams produce a warning. Right-angle rotation and pixel
-aspect ratio affect display checks. Average fps is checked; variable frame rate
-and individual timestamp continuity are not validated. Missing stream duration
-falls back to container duration, so precise audio coverage cannot always be
-inferred. An audio stream ending more than `max_silence` before the video fails
-`audio_coverage`. Stream start offsets are not compared. Event timestamps are
-relative to each selected stream's start.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md).
 
-Still title cards, fades, and deliberate pauses can trigger detections. Adjust
-thresholds for your content. Peaks near full scale indicate clipping risk; they
-do not prove that a signal was previously clipped. No speech recognition,
-perceptual video assessment, codec policy, or platform API validation is done.
-FFmpeg diagnostics follow the upstream
-[filter documentation](https://ffmpeg.org/ffmpeg-filters.html).
-
-## Development
+### Local Development Setup
 
 ```console
-python -m pip install -e '.[dev]'
-python -m unittest discover -s tests -v
-python -m ruff check src tests
-python -m ruff format --check src tests
+# Clone and install in editable mode with development dependencies
+git clone https://github.com/YusufBeratZengin/video-qa.git
+cd video-qa
+python -m pip install -e ".[dev]"
+
+# Run tests and coverage
+python -m pytest
+
+# Run linting and formatting checks
+python -m ruff check src tests scripts
+python -m ruff format --check src tests scripts
+
+# Run static type checking
 python -m mypy
-python -m build && python -m twine check dist/*
+
+# Build distributions
+python -m build
 ```
-
-To test without installing the package, set `PYTHONPATH=src` in your shell first
-(PowerShell: `$env:PYTHONPATH='src'`). Unit tests use stdlib `unittest`. Synthetic
-integration tests generate tiny `testsrc` + `sine` videos with FFmpeg; they also
-check black/frozen/silent and clipped renders. They skip if FFmpeg is unavailable.
-`VIDEO_QA_TEST_FFMPEG` can select a test binary without installing the extra.
-Generated test files stay under the ignored `is/tests/` directory.
-
-CI runs lint, formatting, static typing with `mypy`, tests, and wheel/sdist builds
-on Ubuntu and Windows with Python 3.10 and 3.14.
 
 ## License
 
-MIT. Copyright (c) 2026 Yusuf Berat Zengin.
+MIT. Copyright (c) 2026 Yusuf Berat Zengin. See [LICENSE](LICENSE) for details.

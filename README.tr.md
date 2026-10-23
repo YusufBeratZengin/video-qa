@@ -1,79 +1,97 @@
 # video-qa
 
 [![CI](https://github.com/YusufBeratZengin/video-qa/actions/workflows/ci.yml/badge.svg)](https://github.com/YusufBeratZengin/video-qa/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PyPI version](https://img.shields.io/pypi/v/video-qa.svg)](https://pypi.org/project/video-qa/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Yayınlamadan önce render edilmiş videolara yerel kalite kontrolü uygular.
-Donmuş görüntü, siyah bölümler, eksik veya sessiz ses, kırpılma riski taşıyan
-ses tepeleri, ses yüksekliği ve çözünürlük/fps/süre sapmalarını kontrol eder.
-Remotion veya FFmpeg ile video üreten iş akışlarında CI kontrolü olarak kullanılabilir.
+FFmpeg kullanarak render edilmiş videolar için yerel kalite kontrol kapısı.
+
+Yayınlamadan önce veya otomatik bir CI denetimi olarak donmuş kareleri, siyah bölümleri,
+eksik veya sessiz sesi, kırpılma riski taşıyan ses tepelerini, ses yüksekliği sapmalarını
+ve beklenmeyen çözünürlük/fps/süre durumlarını tespit eder. Remotion render'ları veya
+FFmpeg otomasyon betikleri sonrası kullanım için idealdir.
 
 [English](README.md) · [Katkı rehberi](CONTRIBUTING.md) · [Değişiklikler](CHANGELOG.md)
 
-## Kurulum
+![video-qa terminal demosu](docs/demo.svg)
 
-Python 3.10 veya üzeri ve yerel bir FFmpeg kurulumu gerekir. PATH üzerinde `ffprobe`
-bulunuyorsa veya `--ffprobe` ile belirtilmişse kapsayıcı ve akış bilgileri ffprobe
-ile alınır. Sistemde `ffprobe` yoksa `video-qa` otomatik olarak `ffmpeg -hide_banner -i`
-çıktısını ayrıştırmaya geçer; böylece ek bir ffprobe ikilisi kurmadan doğrudan FFmpeg
-ile çalışabilir.
+## Neden video-qa?
 
-FFmpeg dağıtımınız `freezedetect`, `blackdetect`, `silencedetect`, `astats` ve
-`loudnorm` filtrelerini içermelidir.
-[FFmpeg indirme sayfasından](https://ffmpeg.org/download.html) uygun dağıtımı seçebilirsiniz.
+* **%100 Yerel ve Sıfır Bulut Maliyeti**: FFmpeg ile doğrudan kendi makinenizde veya CI sunucunuzda çalışır. Video yükleme, üçüncü taraf API çağrısı ve abonelik ücreti yoktur.
+* **Eşzamanlı Otomatik Kusur Tespiti**: Donmuş kareleri, siyah ekranları, sessiz ses kopmalarını, tepe kırpılmalarını, ses yüksekliği sapmalarını ve ses/görüntü uyumsuzluklarını izleyicileriniz fark etmeden önce tespit eder.
+* **CI/CD ve Remotion Boru Hatları İçin Tasarlandı**: Yerel JUnit XML, katı JSON çıktısı, standart çıkış kodları ve YouTube Shorts, Instagram Reels, TikTok hazır profilleriyle GitHub Actions'a doğrudan bağlanır.
 
-Depo klasöründe:
+## Hızlı başlangıç
+
+Python 3.10+ ve yerel bir FFmpeg kurulumu gerektirir.
 
 ```console
+# 1. video-qa paketini kurun (PATH üzerinde ffmpeg yoksa '.[ffmpeg]' ekleyin)
 python -m pip install .
+
+# 2. Render edilen videonuzu yerleşik Shorts profiliyle denetleyin
 video-qa check out.mp4 --profile shorts
 ```
 
-`python -m pip install '.[ffmpeg]'`, PATH üzerinde FFmpeg yoksa `imageio-ffmpeg`
-paketinin ikilisini kullanmayı sağlar. `imageio-ffmpeg` yalnızca `ffmpeg` ikilisi
-sağlasa da `video-qa` yerleşik FFmpeg metaveri yedeği sayesinde sorunsuz çalışır.
-İkili yollarını `--ffmpeg` ve `--ffprobe` ile doğrudan da verebilirsiniz:
+PATH üzerinde `ffprobe` varsa veya `--ffprobe` ile belirtilmişse metaveriler ffprobe JSON ile okunur. `ffprobe` bulunmadığında `video-qa` otomatik olarak yerleşik `ffmpeg -hide_banner -i` çözümleyicisine geçer; böylece harici ffprobe bağımlılığı olmadan tam işlevsellikle çalışır.
+
+## Kullanım örnekleri
 
 ```console
-video-qa check out.mp4 --ffmpeg /path/to/ffmpeg --ffprobe /path/to/ffprobe
-```
-
-İşlem bilgisayarınızda çalışır; video yüklenmez, API çağrılmaz, çalışma sırasında
-ikili indirilmez ve kaynak video değiştirilmez. FFmpeg girdilerinde ağ protokolleri
-kapalıdır. Raporlar dosya yolunu ve bazen çözücü hata mesajlarını içerir;
-paylaşmadan önce gözden geçirin.
-
-## Kullanım
-
-```console
+# Yerleşik profilleri ve eşik değerlerini listeleme
 video-qa --list-profiles
+
+# Özel eşik değerleri belirterek çalıştırma
 video-qa check out.mp4 --profile shorts --max-freeze 1.5 --target-lufs -14
 video-qa check out.mp4 --profile reels --max-duration 120 --max-silence 1
+
+# Makine tarafından okunabilir JSON veya JUnit XML raporu alma
 video-qa check out.mp4 --profile tiktok --format json --output report.json
 video-qa check out.mp4 --profile examples/custom.toml --format junit --output junit.xml
+
+# Uyarı durumunda CI sürecini durdurma (çıkış kodu 1)
 video-qa check out.mp4 --fail-on-warn
-python -m video_qa check out.mp4 --max-black 0.25 --timeout 600
+
+# Özel zaman aşımı ve ikili yolları
+video-qa check out.mp4 --ffmpeg /path/to/ffmpeg --ffprobe /path/to/ffprobe --timeout 600
 ```
 
-Komut satırı seçenekleri:
-* `--list-profiles`: Yerleşik profilleri ve eşik değerlerini yazdırıp çıkar.
-* `--fail-on-warn`: Uyarıları (örneğin ses yüksekliği sapmaları veya çoklu akış bildirimleri) başarısızlık sayar (çıkış kodu 1).
-* `--format`: Çıktı biçimi (`human` tablo, `json` katı JSON, `junit` JUnit XML).
+### Komut Satırı Seçenekleri
+
+* `--profile`: Hazır profil adı (`shorts`, `reels`, `tiktok`) veya özel `.toml`/`.json` dosya yolu.
+* `--list-profiles`: Yerleşik profilleri ve varsayılan eşiklerini yazdırıp çıkar.
+* `--fail-on-warn`: Uyarıları (örneğin ses yüksekliği sapmalarını) başarısızlık sayar (çıkış kodu 1).
+* `--format`: Rapor biçimi: `human` (varsayılan tablo), `json` (katı şema) veya `junit` (JUnit XML).
 * `--output`: Raporu stdout yerine doğrudan belirtilen dosyaya yazar.
+* `--timeout`: Alt işlem başına saniye cinsinden zaman aşımı (varsayılan: 300).
+* `--ffmpeg` / `--ffprobe`: Özel çalıştırılabilir dosya yolları.
 
 | Çıkış kodu | Anlamı |
 | --- | --- |
-| 0 | Zorunlu kontroller geçti; uyarı bulunabilir (`--fail-on-warn` verilmedikçe) |
-| 1 | Kalite, araç, çözme, ölçüm, uyarı (`--fail-on-warn` ile) veya rapor yazma hatası |
-| 2 | Geçersiz komut, seçenek veya profil yapılandırması |
+| 0 | Tüm zorunlu kontroller geçti; uyarılar bulunabilir (`--fail-on-warn` verilmedikçe) |
+| 1 | Kalite başarısızlığı, çözme/araç/ölçüm hatası, `--fail-on-warn` ile uyarı veya rapor yazma hatası |
+| 2 | Geçersiz bağımsız değişkenler veya profil yapılandırması |
 
-Analiz hataları seçilen rapor biçiminde başarısız bir `analysis` kontrolü olarak
-gösterilir. Uyarılar varsayılan olarak çıkış kodunu değiştirmez. JUnit çıktısında uyarılar
-`system-out`, başarısız kontroller `failure` öğesiyle gösterilir.
+### CI/CD Entegrasyonu (GitHub Actions)
 
-## Örnek çıktı
+Remotion veya FFmpeg ile video render ettikten sonra CI hattınızda `video-qa`'yı otomatik kalite kapısı olarak çalıştırabilirsiniz. Tam ve yeniden kullanılabilir bir iş akışı için [examples/github-workflow.yml](examples/github-workflow.yml) dosyasına bakın.
 
-### Konsol tablosu (`--format human`)
+```yaml
+- name: video-qa kalite kapısını çalıştır
+  run: video-qa check out.mp4 --profile shorts --format junit --output junit.xml
+
+- name: JUnit raporunu yükle
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: video-qa-junit-report
+    path: junit.xml
+```
+
+### Örnek Raporlar
+
+#### Konsol tablosu (`--format human`)
 
 ```text
 out.mp4 (profile: shorts, probe: ffmpeg)
@@ -93,7 +111,7 @@ PASS    audio_coverage  Video extends 0.000s beyond audio; allowed <= 2s
 PASS: 0 failure(s), 1 warning(s)
 ```
 
-### JUnit XML raporu (`--format junit`)
+#### JUnit XML raporu (`--format junit`)
 
 ```xml
 <?xml version='1.0' encoding='utf-8'?>
@@ -121,61 +139,36 @@ PASS: 0 failure(s), 1 warning(s)
 </testsuite>
 ```
 
-`scripts/make_examples.py` betiğiyle üretilen tam örnek dosyalar
-[examples/report.json](examples/report.json) ve [examples/junit.xml](examples/junit.xml)
-altındadır.
+Örnek çıktı dosyaları: [examples/report.json](examples/report.json) ve [examples/junit.xml](examples/junit.xml).
 
-## Sürekli Entegrasyon (GitHub Actions)
+## Yapılandırma
 
-Remotion veya FFmpeg ile video render ettikten sonra `video-qa` aracını CI hattınızda
-otomatik kalite kapısı olarak çalıştırabilirsiniz. Tam örnek iş akışı için
-[examples/github-workflow.yml](examples/github-workflow.yml) dosyasına bakın.
+Yerleşik profiller popüler kısa video platformları için temel standartları sunar:
 
-```yaml
-- name: Run video-qa quality gate
-  run: video-qa check out.mp4 --profile shorts --format junit --output junit.xml
-
-- name: Upload JUnit report
-  if: always()
-  uses: actions/upload-artifact@v4
-  with:
-    name: video-qa-junit-report
-    path: junit.xml
-```
-
-## Profiller ve eşik değerleri
-
-Hazır profiller içerik üretimi için başlangıç kurallarıdır; platformların güncel
-yükleme sınırlarını veya videonun kabul edileceğini garanti etmez. Profil listesini
-istediğiniz an `video-qa --list-profiles` ile görüntüleyebilirsiniz.
-
-| Profil | Görüntü boyutu | Oran | Ortalama fps | Süre |
+| Profil | Görüntü matrisi | En-boy oranı | Ortalama fps | Süre |
 | --- | --- | --- | --- | --- |
-| `shorts` | 1080×1920 | 9:16 | 24–60 | 0,1–60 saniye |
-| `reels` | 1080×1920 | 9:16 | 24–60 | 0,1–90 saniye |
-| `tiktok` | 1080×1920 | 9:16 | 24–60 | 0,1–180 saniye |
+| `shorts` | 1080×1920 | 9:16 | 24–60 | 0.1–60 saniye |
+| `reels` | 1080×1920 | 9:16 | 24–60 | 0.1–90 saniye |
+| `tiktok` | 1080×1920 | 9:16 | 24–60 | 0.1–180 saniye |
 
-Ortak eşikler: en fazla 1,5 saniye donma, 0,5 saniye siyah görüntü ve 2 saniye
-sessizlik. Ses akışı zorunludur. Hedef ses yüksekliği −14 LUFS, tolerans ±2 LUFS'tır;
-bu sınırın dışı varsayılan olarak uyarıdır. Örnek tepe değeri −0,1 dBFS veya
-gerçek tepe değeri −0,1 dBTP üzerine çıkarsa kontrol başarısız olur.
+### Varsayılan Eşikler
 
-Süre eşikleri toplam süreye değil, en uzun kesintisiz bölüme uygulanır; baştaki
-ve sondaki bölümler de sayılır. Eşiğe eşit değer geçer. Siyah görüntü ve sessizlikte
-algılama alt sınırı 1 ms'dir. Normal kare aralıklarını donma saymamak için donma
-filtresi en az bir ortalama kare süresi artı 1 ms bekler; çok kısa tekrarlar
-kaçabilir. Hassasiyet kare ve örnek süresiyle sınırlıdır. Tam dijital sessizlikte ölçülen
-`-inf` değeri JSON'da `"-inf"` metniyle gösterilir. Sessiz video sessizlik
-kontrolünden kalır.
+| Ayar | Varsayılan | Aşıldığında Sonuç |
+| --- | --- | --- |
+| `max_freeze` | 1.5 saniye | Başarısızlık (Failure) |
+| `max_black` | 0.5 saniye | Başarısızlık (Failure) |
+| `max_silence` | 2 saniye | Başarısızlık (Failure) |
+| `target_lufs` / `lufs_tolerance` | −14 / ±2 LUFS | Uyarı (Warning) |
+| `max_peak_dbfs` | −0.1 dBFS örnek tepe ve −0.1 dBTP gerçek tepe | Başarısızlık (Failure) |
+| `require_audio` | `true` | Ses akışı yoksa başarısızlık |
 
-Özel TOML/JSON dosyaları düz bir tablo/nesne olmalıdır. `extends` ile bir hazır
-profilden başlanır; verilmezse `shorts` kullanılır. Eksik alanlar devralınır;
-bilinmeyen alan, yanlış tür, sonlu olmayan sayı ve çelişen sınırlar reddedilir.
-Komut satırındaki eşikler profil değerlerini geçersiz kılar.
+### Özel Profiller (TOML ve JSON)
+
+Özel profil dosyaları `extends` anahtarıyla yerleşik bir profili miras alabilir (varsayılan `shorts`):
 
 ```toml
 extends = "shorts"
-name = "benim-kontrolum"
+name = "my-render-gate"
 max_duration = 75
 max_freeze = 0.5
 target_lufs = -14
@@ -183,64 +176,47 @@ lufs_tolerance = 2
 loudness_severity = "fail"
 ```
 
-Çözünürlük için `width`/`height`, oran için `aspect_ratio` (sayısal en/boy),
-mutlak oran toleransı için `aspect_tolerance` (0.01), fps için `min_fps`/`max_fps`,
-süre için `min_duration`/`max_duration` kullanılır. Diğer alanlar `max_black`,
-`max_silence`, `silence_db` (−50), `freeze_noise_db` (−60), `black_pixel_threshold`
-(0.1), `black_picture_ratio` (0.98), `max_peak_dbfs` ve `require_audio` alanlarıdır.
-`loudness_severity`, `warn` veya `fail` olabilir.
-[TOML](examples/custom.toml) ve [JSON](examples/custom.json) örnekleri depodadır.
+Yapılandırılabilir anahtarlar: `width`, `height`, `aspect_ratio`, `aspect_tolerance`, `min_fps`, `max_fps`, `min_duration`, `max_duration`, `max_freeze`, `max_black`, `max_silence`, `silence_db` (−50 dB), `freeze_noise_db` (−60 dB), `black_pixel_threshold` (0.1), `black_picture_ratio` (0.98), `max_peak_dbfs`, `require_audio` ve `loudness_severity` (`warn` veya `fail`). Örnekler: [TOML](examples/custom.toml) ve [JSON](examples/custom.json).
 
-## Çalışma biçimi, performans ve sınırlar
+## SSS ve Sınırlar
 
-Akış metaverileri `ffprobe` JSON çıktısından veya `ffmpeg -hide_banner -i` stderr
-çıktısından alınır. Çözme işlemi iş parçacığı havuzuyla iki paralel FFmpeg geçişinde
-gerçekleştirilir: görüntüde `freezedetect`/`blackdetect`, seste `silencedetect`/`astats`/`loudnorm`.
-İki geçişin eşzamanlı çalışması çok çekirdekli sistemlerde işlem hızını en üst düzeye
-çıkarırken her alt işlem için bağımsız `--timeout` güvencesini ve deterministik rapor
-sırasını korur. Modern donanımda 60 saniyelik 1080×1920 sentetik bir klibin tam
-analizi yaklaşık 2,7 saniye sürer (gerçek zamandan ~22 kat daha hızlı).
+* **Çözme ve analiz nasıl çalışır?**
+  Akış metaverileri `ffprobe` (veya `ffmpeg -i` yedeği) ile alınır. Analiz eşzamanlı iki FFmpeg iş parçacığıyla yürütülür: video akışında `freezedetect`/`blackdetect`, ses akışında `silencedetect`/`astats`/`loudnorm`. Modern çok çekirdekli sistemlerde 60 saniyelik video yaklaşık 2.7 saniyede (~22 kat gerçek zamanlı hızda) taranır.
+* **Hareketsiz başlık kartları veya sanatsal duraklamalar tetiklenebilir mi?**
+  Evet. Kasıtlı duraklamalar, sabit görsel slaytlar veya ses açılma/kapanma efektleri belirlenen süreleri aşarsa donma ya da sessizlik olarak işaretlenebilir. İhtiyacınıza göre `--max-freeze`, `--max-black` veya `--max-silence` eşiklerini esnetebilirsiniz.
+* **Ses tepeleri ve ses yüksekliği nasıl ölçülür?**
+  Örnek tepe (sample peak) ve gerçek tepe (true peak) değerleri orijinal ham ses üzerinden ölçülür. Ses yüksekliği EBU R128 entegre standardına (LUFS) göre ölçülür. Tamamen sessiz ses `-inf` döner (JSON çıktısında `"-inf"` metni olarak serileştirilir).
+* **Kapsam dışı durumlar nelerdir?**
+  `video-qa` ses tanıma (STT), algısal sübjektif video kalitesi puanlaması (VMAF gibi), codec uyumluluk denetimi veya platform API yükleme doğrulaması yapmaz.
+* **Medya dosyalarım herhangi bir yere yükleniyor mu?**
+  Hayır. Tüm analiz tamamen yerel bilgisayarınızda veya CI sunucunuzda gerçekleşir. FFmpeg çağrılarında ağ protokolleri kapalıdır. Oluşturulan raporlar yerel dosya yollarını ve çözücü hata iletilerini içerebilir; paylaşmadan önce inceleyiniz.
 
-Örnek tepe değeri loudnorm'dan önce ölçülür; rapor normalleştirilmiş çıktıyı değil
-özgün girdinin ölçümlerini kullanır. Çıktı diske video olarak yazılmaz. Araç hatası
-veya gerekli ses ölçümünün eksikliği kontrolü başarısız yapar. `--timeout` her alt işlem
-için ayrı uygulanır; varsayılan 300 saniyedir.
+## Katkıda bulunma
 
-Kapak görseli dışındaki ilk video ve ilk ses akışı kontrol edilir. Birden fazla
-akış varsa uyarı verilir. Dik açılı dönüş ve piksel oranı görüntü oranı hesabına
-katılır. Ortalama fps kontrol edilir; değişken fps ve tek tek kare zamanlarının
-sürekliliği doğrulanmaz. Akış süresi yoksa kapsayıcı süresi kullanılır; bu durumda
-sesin tam olarak ne kadar alanı kapladığı bilinmeyebilir. Video, sesten
-`max_silence` değerinden uzun sürerse `audio_coverage` başarısız olur.
-Akış başlangıç farkları karşılaştırılmaz; olay zamanları ilgili akışın başına göredir.
+Katkılarınızı memnuniyetle kabul ediyoruz! Lütfen [CONTRIBUTING.md](CONTRIBUTING.md) rehberimizi ve [Davranış Kuralları](CODE_OF_CONDUCT.md)'nı inceleyin.
 
-Sabit başlık kartları, kararmalar ve bilinçli duraklamalar uyarılabilir; eşikleri
-içeriğinize göre ayarlayın. Tam ölçeğe yakın ses tepeleri kırpılma riskini gösterir,
-önceden kırpılma yaşandığını kesin kanıtlamaz. Konuşma tanıma, algısal kalite
-değerlendirmesi, kodek politikası veya platform API doğrulaması yapılmaz.
-Filtrelerin davranışı için [FFmpeg belgelerine](https://ffmpeg.org/ffmpeg-filters.html) bakın.
-
-## Geliştirme
+### Yerel Geliştirme Kurulumu
 
 ```console
-python -m pip install -e '.[dev]'
-python -m unittest discover -s tests -v
-python -m ruff check src tests
-python -m ruff format --check src tests
+# Depoyu klonlayın ve geliştirme bağımlılıklarıyla düzenlenebilir modda kurun
+git clone https://github.com/YusufBeratZengin/video-qa.git
+cd video-qa
+python -m pip install -e ".[dev]"
+
+# Testleri ve kapsam raporunu çalıştırın
+python -m pytest
+
+# Kod stili ve biçimlendirme kontrolleri
+python -m ruff check src tests scripts
+python -m ruff format --check src tests scripts
+
+# Statik tip kontrolü
 python -m mypy
-python -m build && python -m twine check dist/*
+
+# Paket dağıtımlarını derleyin
+python -m build
 ```
-
-Kurulum yapmadan test etmek için `PYTHONPATH=src` ayarlayın
-(PowerShell: `$env:PYTHONPATH='src'`). Testler standart kütüphanedeki `unittest` ile
-çalışır. FFmpeg varsa küçük `testsrc` + `sine` videoları üretilir; temiz video,
-donmuş/siyah/sessiz görüntü ve kırpılmış ses kontrol edilir. FFmpeg yoksa bu testler
-atlanır. `VIDEO_QA_TEST_FFMPEG` ile test ikilisini seçebilirsiniz. Geçici test dosyaları
-git tarafından izlenmeyen `is/tests/` altında tutulur.
-
-CI; Ubuntu ve Windows üzerinde Python 3.10 ve 3.14 ile lint, biçim, `mypy` tip denetimi,
-test ve paket derleme kontrollerini çalıştırır.
 
 ## Lisans
 
-MIT. Copyright (c) 2026 Yusuf Berat Zengin.
+MIT. Telif hakkı (c) 2026 Yusuf Berat Zengin. Ayrıntılar için [LICENSE](LICENSE) dosyasına bakınız.
