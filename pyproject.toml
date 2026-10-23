@@ -42,7 +42,13 @@ dependencies = ["tomli>=2; python_version < '3.11'"]
 
 [project.optional-dependencies]
 ffmpeg = ["imageio-ffmpeg>=0.5"]
-dev = ["ruff>=0.9", "build>=1", "mypy>=1.10"]
+dev = [
+  "ruff>=0.9",
+  "build>=1",
+  "mypy>=1.10",
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+]
 
 [project.scripts]
 video-qa = "video_qa.cli:main"
@@ -77,3 +83,12 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+addopts = "--cov=video_qa --cov-report=term-missing --cov-fail-under=85"
+
+[tool.coverage.run]
+source = ["video_qa"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 85
