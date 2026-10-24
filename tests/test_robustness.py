@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 from tests.support import temporary_directory
-from video_qa.analyzer import AnalysisError, find_ffmpeg
+from video_qa.analyzer import AnalysisError, find_ffmpeg, probe_ffmpeg
 from video_qa.cli import main
 
 
@@ -83,6 +83,9 @@ class RobustnessTests(unittest.TestCase):
                     "-y",
                     "-f",
                     "lavfi",
+                    "-display_rotation",
+                    "90",
+                    "-noautorotate",
                     "-i",
                     "testsrc=size=1920x1080:rate=30",
                     "-f",
@@ -91,8 +94,6 @@ class RobustnessTests(unittest.TestCase):
                     "sine=frequency=440",
                     "-t",
                     "1",
-                    "-metadata:s:v:0",
-                    "rotate=90",
                     "-c:v",
                     "ffv1",
                     "-c:a",
@@ -103,6 +104,9 @@ class RobustnessTests(unittest.TestCase):
                 check=True,
                 timeout=20,
             )
+            media = probe_ffmpeg(rot_file, self.ffmpeg, timeout=15)
+            self.assertEqual((media.width, media.height), (1920, 1080))
+            self.assertEqual(abs(media.rotation), 90)
             code, stdout, stderr = self.invoke(
                 ["check", str(rot_file), "--profile", "shorts", "--ffmpeg", self.ffmpeg]
             )
@@ -134,7 +138,7 @@ class RobustnessTests(unittest.TestCase):
                     "sine=frequency=440",
                     "-vf",
                     "mpdecimate",
-                    "-vsync",
+                    "-fps_mode",
                     "vfr",
                     "-t",
                     "1",

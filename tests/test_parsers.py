@@ -56,6 +56,31 @@ class ProbeTests(unittest.TestCase):
         self.data["streams"][1]["duration"] = "90"
         self.assertEqual(self.parse().duration, 90)
 
+    def test_rotation_metadata_sources(self):
+        for metadata, expected in (
+            ({"tags": {"rotate": "90"}}, 90),
+            (
+                {"side_data_list": [{"side_data_type": "Display Matrix", "rotation": -90}]},
+                -90,
+            ),
+            (
+                {
+                    "tags": {"rotate": "0"},
+                    "side_data_list": [{"side_data_type": "Display Matrix", "rotation": 90}],
+                },
+                90,
+            ),
+        ):
+            with self.subTest(metadata=metadata):
+                video = self.data["streams"][0]
+                video.pop("tags", None)
+                video.pop("side_data_list", None)
+                video.update(width=1920, height=1080, **metadata)
+                media = self.parse()
+                self.assertEqual(media.rotation, expected)
+                self.assertEqual((media.width, media.height), (1920, 1080))
+                self.assertAlmostEqual(media.display_aspect_ratio, 1080 / 1920)
+
     def test_missing_audio_is_valid(self):
         self.data["streams"] = self.data["streams"][:1]
         self.assertFalse(self.parse().has_audio)
