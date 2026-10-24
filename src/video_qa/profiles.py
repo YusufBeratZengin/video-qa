@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import sys
 from dataclasses import asdict, dataclass, fields, replace
 from pathlib import Path
 
@@ -87,10 +88,10 @@ def load_profile(source: str) -> Profile:
     if path.suffix.lower() == ".json":
         data = json.loads(path.read_text(encoding="utf-8-sig"))
     elif path.suffix.lower() == ".toml":
-        try:
+        if sys.version_info >= (3, 11):
             import tomllib
-        except ImportError:  # Python 3.10
-            import tomli as tomllib  # type: ignore[no-redef]
+        else:
+            import tomli as tomllib
         data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
     else:
         raise ValueError("Profile must be shorts, reels, tiktok, or a .json/.toml file")
